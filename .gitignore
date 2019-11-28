@@ -1,0 +1,25 @@
+# Git ignore of emotiv-lightSwitch
+# See this repository at:
+# https://github.com/melvinmajor/emotiv-lightSwitch
+# =================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Files and folders of IDE
+.vscode/
+
+# Credentials of EMOTIV Cortex 2.0
+cortex_creds
+
