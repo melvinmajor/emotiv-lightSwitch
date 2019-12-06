@@ -1,8 +1,20 @@
 import asyncio
 import json
 from lib.cortex import Cortex
+import PySimpleGUI as gui
 
-async def do_stuff(cortex):
+def initWindow():
+    gui.change_look_and_feel('DarkGrey')
+    # All the stuff inside your window.
+
+    text_component = gui.Text('this is some text', key='__TEXT__')
+
+    layout = [ [gui.Text('emotiv-lightSwitch project :')], [text_component]]
+    # Create the window
+    window = gui.Window('Preview', layout)
+    return window
+
+async def do_stuff(cortex, window):
     # await cortex.inspectApi()
     print("** USER LOGIN **")
     await cortex.get_user_login()
@@ -33,6 +45,8 @@ async def do_stuff(cortex):
         # while cortex.packet_count < 10:
         while True:
             
+            window.Read(timeout=0)
+
             data_json = await cortex.get_data()
             data = json.loads(data_json)
             F8_data = data['eeg'][14]
@@ -40,18 +54,22 @@ async def do_stuff(cortex):
             if F8_data < threshold:
                 if previous_low is False:
                     previous_low = True
+                    window.Element('__TEXT__').Update('LOW')
                     print(f"GOING LOOOOW : {F8_data}" )
             else:
                 if previous_low is True:
                     previous_low = False
+                    window.Element('__TEXT__').Update('HIGH')
                     print(f"GOING HIGHHHH : {F8_data}")
 
         await cortex.close_session()
 
 def main():
+    w = initWindow()
     cortex = Cortex('./cortex_creds')
-    asyncio.run(do_stuff(cortex))
+    asyncio.run(do_stuff(cortex, w))
     cortex.close()
+    w.close()
 
 if __name__ == '__main__':
     main()
