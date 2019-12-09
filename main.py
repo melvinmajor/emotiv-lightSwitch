@@ -2,6 +2,12 @@ import asyncio
 import json
 from lib.cortex import Cortex
 import PySimpleGUI as gui
+import numpy as np
+import matplotlib.pyplot as plotter
+import scipy
+import scipy.fftpack
+import pylab
+from scipy import pi
 
 def initWindow():
     gui.change_look_and_feel('DarkGrey')
@@ -9,7 +15,7 @@ def initWindow():
 
     text_component = gui.Text('this is some text', key='__TEXT__')
 
-    layout = [ [gui.Text('emotiv-lightSwitch project :')], [text_component]]
+    layout = [ [gui.Text('Relaxation level')], [text_component]]
     # Create the window
     window = gui.Window('Preview', layout)
     return window
@@ -36,40 +42,61 @@ async def do_stuff(cortex, window):
         print("** CREATE SESSION **")
         await cortex.create_session(activate=True, headset_id=cortex.headsets[0])
     
-        print("** SUBSCRIBE EEG **")
+        print("** SUBSCRIBE POW **")
         await cortex.subscribe(['eeg'])
 
-        threshold = 4200
-        previous_low = False
+        max = 0
+        min = -1
+        level = 1
+        sampling_rate = 128
+        # sampling_rate = 128
+        sampling_frequency = 1 / sampling_rate
+
+        signal = []
 
         # while cortex.packet_count < 10:
         while True:
             
-            window.Read(timeout=0)
+            if len(signal) >= sampling_rate:
+                break
+
+            # window.Read(timeout=0)
 
             data_json = await cortex.get_data()
-            data = json.loads(data_json)
-            F8_data = data['eeg'][14]
+            data = json.loads(data_json)['eeg']
+            signal.append(data[2])
+           
+            # window.Element('__TEXT__').Update(f'Level: {signal}')
+        
+        print(str(len(signal)))
+        print(signal)
 
-            if F8_data < threshold:
-                if previous_low is False:
-                    previous_low = True
-                    window.Element('__TEXT__').Update('LOW')
-                    print(f"GOING LOOOOW : {F8_data}" )
-            else:
-                if previous_low is True:
-                    previous_low = False
-                    window.Element('__TEXT__').Update('HIGH')
-                    print(f"GOING HIGHHHH : {F8_data}")
+        fourierTransform = np.fft.fft(signal)/len(signal)
+        fourierTransform = fourierTransform[range(int(len(signal)/2))]
+        print(fourierTransform)
+        print(len(fourierTransform))
+
+        fft = abs(scipy.fft(signal))
+        freqs = scipy.fftpack.fftfreq(len(signal), signal[1] - signal[0])
+        
+
+        pylab.plot(freqs, 20 * scipy.log10(FFT), 'x')
+        pylab.show()
+
+        y = fourierTransform
+        x = range(1, len(fourierTransform) + 1)
+        #plotter.scatter(x, y)
+        #plotter.show()
 
         await cortex.close_session()
 
 def main():
-    w = initWindow()
+    # w = initWindow()
+    w = 0
     cortex = Cortex('./cortex_creds')
     asyncio.run(do_stuff(cortex, w))
-    cortex.close()
-    w.close()
+    # cortex.close()
+    # w.close()
 
 if __name__ == '__main__':
     main()
