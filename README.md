@@ -2,6 +2,8 @@
 >
 > Project for the lesson of Signal processing, 3nd Bachelor at EPHEC Louvain-la-Neuve 
 
+*Please note this project is not in good running condition.*
+
 ## The Team
 
 Our team is composed of 4 people:
